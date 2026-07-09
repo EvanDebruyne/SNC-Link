@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Smart Network Controller (SNC)</title>
+<style>
+:root{
+  --bg:#0a1828;
+  --bg2:#0f2438;
+  --ink:#e8f1f8;
+  --muted:#9fb6c9;
+  --water:#2fa7e0;
+  --water2:#48d6c8;
+  --accent:#ffd166;
+  --good:#37c97f;
+  --mid:#f0b429;
+  --bad:#ef6461;
+  --line:#1d3a52;
+  --brand-navy:#1f2a6e;
+  --brand-red:#c8102e;
+}
+html,body{margin:0;padding:0;width:100%;height:100%;background:#08131f;overflow:hidden;}
+.reveal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--ink);font-size:30px;}
+.reveal *{box-sizing:border-box;}
+.reveal h1,.reveal h2,.reveal h3,.reveal h4{margin:0 0 .32em 0;}
+.reveal p{margin:0 0 .55em 0;}
+.reveal ul{margin:.2em 0;padding-left:0;}
+.slides{position:relative;width:1280px;height:720px;transform-origin:center center;}
+.slides section{position:absolute;left:0;top:0;width:1280px;height:720px;padding:40px 60px;text-align:left;display:none;overflow:hidden;background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='1280'%20height='180'%3E%3Cg%20fill='none'%20stroke='%232fa7e0'%20stroke-opacity='0.07'%20stroke-width='2'%3E%3Cpath%20d='M0,120%20C260,80%20420,150%20660,115%20S1080,80%201280,120'/%3E%3Cpath%20d='M0,150%20C300,115%20460,175%20700,140%20S1120,110%201280,148'%20stroke='%2348d6c8'/%3E%3C/g%3E%3C/svg%3E") bottom center / 100% auto no-repeat, radial-gradient(circle at 80% -10%,var(--bg2),var(--bg) 60%);}
+.slides section[data-background-color]{background:#08131f;}
+.slides section.active{display:block;animation:slidein .4s ease;}
+@keyframes slidein{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.deck-bar{position:fixed;left:0;top:0;height:3px;background:linear-gradient(90deg,var(--brand-navy),var(--water2) 55%,var(--brand-red));width:0;z-index:60;transition:width .3s ease;}
+.deck-counter{position:fixed;right:16px;bottom:12px;font-size:13px;color:var(--muted);z-index:60;}
+.deck-hint{position:fixed;left:122px;bottom:14px;font-size:12px;color:var(--muted);opacity:.55;z-index:60;}
+.deck-nav{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:60;}
+.deck-nav button{background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--water2);font-size:17px;width:40px;height:30px;border-radius:7px;cursor:pointer;line-height:1;}
+.deck-nav button:hover{background:rgba(72,214,200,.18);}
+.reveal h1,.reveal h2,.reveal h3,.reveal h4{font-family:'Segoe UI',system-ui,sans-serif;color:var(--ink);text-transform:none;letter-spacing:-0.5px;font-weight:700;line-height:1.1;}
+.reveal h1{font-size:2.5em;}
+.reveal h2{font-size:1.55em;}
+.reveal h3{font-size:1.05em;color:var(--water2);}
+.reveal p,.reveal li{color:var(--ink);line-height:1.4;}
+.reveal strong{color:var(--accent);}
+.kicker{color:var(--water2);font-size:.55em;font-weight:700;text-transform:uppercase;letter-spacing:3px;margin-bottom:.4em;}
+.muted{color:var(--muted);}
+.lead{font-size:1.15em;color:var(--muted);}
+.big-q{font-size:1.55em;line-height:1.25;font-weight:700;}
+.pill{display:inline-block;background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:.18em .7em;font-size:.5em;color:var(--water2);margin:.15em .2em;font-weight:600;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;}
+.grid12{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;}
+.card{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:18px 22px;}
+.statline{display:flex;gap:10px;flex-wrap:wrap;margin-top:.3em;}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.52em;flex:1;min-width:120px;}
+.stat b{display:block;color:var(--water2);font-size:1.35em;line-height:1;margin-top:2px;}
+.stat span{color:var(--muted);font-size:.78em;text-transform:uppercase;letter-spacing:1px;}
+.sectionlabel{position:absolute;top:26px;right:34px;font-size:.42em;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.bestfor{font-size:.6em;color:var(--muted);margin-top:.6em;}
+.bestfor b{color:var(--good);}
+ul.clean{list-style:none;margin-left:0;}
+ul.clean li{position:relative;padding-left:1.2em;margin:.5em 0;font-size:.82em;}
+ul.clean li:before{content:"";position:absolute;left:0;top:.5em;width:.5em;height:.5em;border-radius:50%;background:var(--water2);}
+.footnote{font-size:.42em;color:var(--muted);position:absolute;bottom:14px;left:34px;}
+.reveal .num-badge{display:inline-flex;align-items:center;justify-content:center;width:1.5em;height:1.5em;border-radius:50%;background:var(--water);color:#06121f;font-weight:800;font-size:.8em;margin-right:.4em;}
+.reveal h2{position:relative;padding-bottom:4px;}
+.reveal h2:after{content:"";position:absolute;left:0;bottom:-6px;width:52px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--brand-red) 0 46%,transparent 46% 54%,var(--water2) 54% 100%);}
+.aqi-plate{display:inline-flex;align-items:center;background:#fff;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.28);}
+.aqi-plate svg{display:block;}
+.brandmark{position:fixed;left:14px;bottom:9px;z-index:60;}
+.brandmark .aqi-plate{flex-direction:column;padding:5px 10px 4px;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.brandmark .aqi-square{display:block;height:30px;width:29px;}
+.brandmark .aqi-url{font-family:'Segoe UI',system-ui,sans-serif;font-size:9px;font-weight:700;letter-spacing:.3px;color:var(--brand-navy);margin-top:3px;line-height:1;}
+.title-logo .aqi-plate{padding:11px 16px;}
+.title-logo .aqi-plate svg{height:54px;width:192px;}
+.end-logo .aqi-plate{padding:16px 22px;}
+.end-logo .aqi-plate svg{height:78px;width:277px;}
+.usegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;font-size:.66em;margin-top:.4em;}
+.usegrid .card{display:flex;gap:16px;align-items:flex-start;}
+.usegrid .card b{color:var(--ink);font-size:1.08em;}
+.usegrid .card .ic{flex:0 0 auto;}
+.reason{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;font-size:.62em;margin-top:.6em;}
+.reason .card{text-align:center;}
+.reason .card .ic{margin-bottom:8px;}
+.reason .card h4{color:var(--accent);margin:.2em 0 .35em;font-size:1.15em;}
+.tunnel-note{font-size:.58em;color:var(--muted);margin-top:.7em;}
+.tunnel-note b{color:var(--water2);}
+.instr{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:.5em;}
+.instr .card{padding:20px 24px;}
+.instr .card h3{color:var(--water2);font-size:1.15em;margin-bottom:.1em;}
+.instr .row{display:flex;gap:16px;align-items:center;}
+.instr .u{display:inline-block;background:var(--bg2);border:1px solid var(--line);color:var(--water2);border-radius:6px;font-size:.5em;font-weight:700;padding:.2em .7em;margin:.3em .3em 0 0;letter-spacing:.5px;}
+.instr p{font-size:.6em;color:var(--ink);margin-top:.5em;}
+.chiprow{display:flex;gap:14px;margin-top:18px;font-size:.56em;}
+.chiprow .chip{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:center;}
+.chiprow .chip b{color:var(--ink);}
+.seccards{display:flex;flex-direction:column;gap:14px;}
+.seccards .card{display:flex;gap:16px;align-items:flex-start;padding:16px 20px;}
+.seccards b{color:var(--ink);font-size:.7em;}
+.seccards p{font-size:.56em;color:var(--muted);margin-top:.2em;line-height:1.4;}
+.contact-card{background:linear-gradient(150deg,#123153,#0c2036);border:1px solid var(--line);border-radius:18px;padding:34px 40px;}
+.contact-row{display:flex;gap:16px;margin-top:22px;flex-wrap:wrap;}
+.cbtn{display:inline-flex;align-items:center;gap:12px;background:var(--water2);color:#06121f;border-radius:11px;padding:14px 22px;font-size:.6em;font-weight:800;}
+.cbtn small{display:block;font-size:.72em;font-weight:700;opacity:.75;letter-spacing:.3px;}
+.cbtn.alt{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--line);}
+.cbtn.alt small{color:var(--muted);}
+</style>
+</head>
+<body>
+
+<!-- AquaSummit Instruments logo (inline SVG so the file stays self-contained) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="aqi-logo" viewBox="0 0 585 165">
+    <rect x="6"   y="27"  width="18"  height="118" fill="#1f2a6e"/>
+    <rect x="6"   y="127" width="121" height="18"  fill="#1f2a6e"/>
+    <rect x="23"  y="6"   width="118" height="18"  fill="#c8102e"/>
+    <rect x="123" y="23"  width="18"  height="104" fill="#c8102e"/>
+    <text x="73" y="93" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="50" font-weight="700" fill="#1f2a6e">AQi</text>
+    <text x="165" y="76"  font-family="Georgia,'Times New Roman',serif" font-size="60" font-weight="700" fill="#1f2a6e">AquaSummit</text>
+    <text x="165" y="140" font-family="Georgia,'Times New Roman',serif" font-size="60" font-weight="700" fill="#c8102e">Instruments</text>
+  </symbol>
+  <symbol id="aqi-mark" viewBox="0 0 147 151">
+    <rect x="6"   y="27"  width="18"  height="118" fill="#1f2a6e"/>
+    <rect x="6"   y="127" width="121" height="18"  fill="#1f2a6e"/>
+    <rect x="23"  y="6"   width="118" height="18"  fill="#c8102e"/>
+    <rect x="123" y="23"  width="18"  height="104" fill="#c8102e"/>
+    <text x="73" y="93" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="50" font-weight="700" fill="#1f2a6e">AQi</text>
+  </symbol>
+</svg>
+
+<div class="brandmark"><span class="aqi-plate"><svg class="aqi-square" viewBox="0 0 147 151"><use href="#aqi-mark"/></svg><span class="aqi-url">aquasummit.com</span></span></div>
+
+<div class="reveal"><div class="slides">
+
+<!-- 1 TITLE -->
+<section data-background-color="#08131f">
+  <div style="display:flex;flex-direction:column;justify-content:center;height:560px;">
+    <div class="title-logo" style="margin-bottom:30px;"><span class="aqi-plate"><svg viewBox="0 0 585 165"><use href="#aqi-logo"/></svg></span></div>
+    <div class="kicker">Cellular SCADA &nbsp;·&nbsp; Built for water utilities</div>
+    <h1 style="margin:.1em 0;">The Smart Network Controller</h1>
+    <p class="lead" style="max-width:17em;">Hook it to the flow meters and turbidimeters you already run, and watch your site from any desk or phone — no full SCADA system, no daily drive.</p>
+    <svg viewBox="0 0 900 90" style="width:100%;max-width:900px;margin-top:16px;">
+      <rect x="0" y="34" width="900" height="22" rx="11" fill="#0d2336" stroke="#1d3a52"/>
+      <g fill="#2fa7e0">
+        <circle cx="40" cy="45" r="5"><animate attributeName="cx" from="-20" to="920" dur="3s" repeatCount="indefinite"/></circle>
+        <circle cx="40" cy="45" r="4" fill="#48d6c8"><animate attributeName="cx" from="-120" to="820" dur="3.4s" repeatCount="indefinite"/></circle>
+        <circle cx="40" cy="45" r="5"><animate attributeName="cx" from="-260" to="660" dur="2.7s" repeatCount="indefinite"/></circle>
+        <circle cx="40" cy="45" r="4" fill="#48d6c8"><animate attributeName="cx" from="-400" to="520" dur="3.1s" repeatCount="indefinite"/></circle>
+        <circle cx="40" cy="45" r="5"><animate attributeName="cx" from="-560" to="360" dur="2.9s" repeatCount="indefinite"/></circle>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- 2 THE IDEA -->
+<section data-background-color="#08131f">
+  <div style="height:560px;display:flex;flex-direction:column;justify-content:center;">
+    <div class="kicker">What it does</div>
+    <p class="big-q" style="font-size:1.9em;line-height:1.2;max-width:15em;">The SNC puts the readings from your remote sites <span style="color:var(--water2);">onto your computer.</span></p>
+    <p class="lead" style="margin-top:.9em;max-width:20em;">Wire it to the meter you already run at a site. It sends that reading to a secure web page you open from any desk or phone — the same numbers your operator sees in the field, brought to you, live.</p>
+  </div>
+</section>
+
+<!-- 3 HOW IT WORKS -->
+<section>
+  <div class="sectionlabel">How it works</div>
+  <h2>From the instrument to your screen</h2>
+  <p class="muted" style="font-size:.6em;margin-top:-.1em;">The SNC sits between the meter you already run and our secure US server. Wire it once — read your site from anywhere.</p>
+  <svg viewBox="0 0 1160 300" style="width:100%;margin-top:6px;">
+    <!-- connecting data line -->
+    <line x1="120" y1="150" x2="1080" y2="150" stroke="#1d3a52" stroke-width="3" stroke-dasharray="2 7"/>
+    <g fill="#2fa7e0">
+      <circle r="5"><animate attributeName="cx" values="120;1080" dur="3.2s" repeatCount="indefinite"/><set attributeName="cy" to="150"/></circle>
+      <circle r="4" fill="#48d6c8"><animate attributeName="cx" values="120;1080" dur="3.2s" begin="-1.1s" repeatCount="indefinite"/><set attributeName="cy" to="150"/></circle>
+      <circle r="5"><animate attributeName="cx" values="120;1080" dur="3.2s" begin="-2.2s" repeatCount="indefinite"/><set attributeName="cy" to="150"/></circle>
+    </g>
+
+    <!-- 1 instruments: flow meter + turbidimeter -->
+    <g>
+      <line x1="34" y1="150" x2="150" y2="150" stroke="#2fa7e0" stroke-width="12"/>
+      <rect x="70" y="108" width="42" height="34" rx="5" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/>
+      <rect x="79" y="115" width="24" height="12" rx="2" fill="#123049" stroke="#2fa7e0"/>
+      <rect x="150" y="106" width="30" height="56" rx="5" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/>
+      <rect x="156" y="113" width="18" height="12" rx="2" fill="#0a1c2c"/><text x="165" y="122" text-anchor="middle" font-size="7" fill="#ffd166">NTU</text>
+      <text x="107" y="196" fill="#e8f1f8" font-size="18" font-weight="700" text-anchor="middle">Your instruments</text>
+      <text x="107" y="216" fill="#9fb6c9" font-size="13" text-anchor="middle">flow meter · turbidimeter</text>
+    </g>
+
+    <!-- 2 SNC device -->
+    <g>
+      <rect x="300" y="98" width="86" height="104" rx="8" fill="none" stroke="#48d6c8" stroke-width="2"/>
+      <text x="343" y="150" fill="#e8f1f8" font-size="26" font-weight="800" text-anchor="middle" font-family="Segoe UI,sans-serif">SNC</text>
+      <circle cx="343" cy="162" r="4" fill="#2fa7e0"/>
+      <line x1="376" y1="98" x2="376" y2="74" stroke="#9fb6c9" stroke-width="2"/><circle cx="376" cy="72" r="4" fill="#ffd166"/>
+      <text x="343" y="230" fill="#e8f1f8" font-size="18" font-weight="700" text-anchor="middle">The SNC</text>
+      <text x="343" y="250" fill="#9fb6c9" font-size="13" text-anchor="middle">reads it · onboard SIM</text>
+    </g>
+
+    <!-- 3 cellular tower -->
+    <g transform="translate(500,0)">
+      <polygon points="70,190 82,110 94,190" fill="none" stroke="#48d6c8" stroke-width="2"/>
+      <line x1="82" y1="110" x2="82" y2="96" stroke="#48d6c8" stroke-width="2"/>
+      <g stroke="#2fa7e0" fill="none" stroke-width="2">
+        <path d="M96,86 q14,14 0,28"><animate attributeName="stroke-opacity" values=".2;1;.2" dur="1.8s" repeatCount="indefinite"/></path>
+        <path d="M104,78 q22,22 0,44"><animate attributeName="stroke-opacity" values=".2;1;.2" dur="1.8s" begin="-.4s" repeatCount="indefinite"/></path>
+        <path d="M68,86 q-14,14 0,28" stroke="#48d6c8"><animate attributeName="stroke-opacity" values=".2;1;.2" dur="1.8s" begin="-.2s" repeatCount="indefinite"/></path>
+        <path d="M60,78 q-22,22 0,44" stroke="#48d6c8"><animate attributeName="stroke-opacity" values=".2;1;.2" dur="1.8s" begin="-.6s" repeatCount="indefinite"/></path>
+      </g>
+      <text x="82" y="230" fill="#e8f1f8" font-size="18" font-weight="700" text-anchor="middle">Cellular</text>
+      <text x="82" y="250" fill="#9fb6c9" font-size="13" text-anchor="middle">low data use</text>
+    </g>
+
+    <!-- 4 secure US server -->
+    <g transform="translate(690,0)">
+      <path d="M60,140 a34,34 0 0,1 66,-10 a26,26 0 0,1 6,50 H70 a30,30 0 0,1 -10,-40 Z" fill="#0d2336" stroke="#2fa7e0" stroke-width="2"/>
+      <rect x="78" y="132" width="40" height="10" rx="2" fill="#123049" stroke="#48d6c8"/>
+      <rect x="78" y="146" width="40" height="10" rx="2" fill="#123049" stroke="#48d6c8"/>
+      <circle cx="85" cy="137" r="2" fill="#37c97f"/><circle cx="85" cy="151" r="2" fill="#37c97f"/>
+      <rect x="120" y="108" width="20" height="16" rx="3" fill="#0d2336" stroke="#ffd166" stroke-width="2"/>
+      <path d="M124,108 v-4 a6,6 0 0,1 12,0 v4" fill="none" stroke="#ffd166" stroke-width="2"/>
+      <text x="98" y="230" fill="#e8f1f8" font-size="18" font-weight="700" text-anchor="middle">Secure server</text>
+      <text x="98" y="250" fill="#9fb6c9" font-size="13" text-anchor="middle">Atlanta, GA · your login</text>
+    </g>
+
+    <!-- 5 your screen -->
+    <g transform="translate(940,0)">
+      <rect x="70" y="102" width="120" height="76" rx="6" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/>
+      <polyline points="82,158 100,140 116,150 132,128 150,142 168,120 180,132" fill="none" stroke="#2fa7e0" stroke-width="2.5"/>
+      <rect x="108" y="178" width="44" height="6" rx="3" fill="#1d3a52"/>
+      <rect x="96" y="184" width="68" height="6" rx="3" fill="#1d3a52"/>
+      <text x="130" y="230" fill="#e8f1f8" font-size="18" font-weight="700" text-anchor="middle">Your screen</text>
+      <text x="130" y="250" fill="#9fb6c9" font-size="13" text-anchor="middle">desk · phone · tablet</text>
+    </g>
+  </svg>
+</section>
+
+<!-- 4 BUILT FOR YOUR INSTRUMENTS -->
+<section>
+  <div class="sectionlabel">The instruments</div>
+  <h2>Built for the meters you already run</h2>
+  <div class="instr">
+    <div class="card">
+      <div class="row">
+        <svg width="118" height="86" viewBox="0 0 118 86">
+          <rect x="4" y="44" width="110" height="26" rx="4" fill="#0d2336" stroke="#2fa7e0" stroke-width="2"/>
+          <rect x="0" y="40" width="8" height="34" fill="#1d3a52"/><rect x="110" y="40" width="8" height="34" fill="#1d3a52"/>
+          <rect x="44" y="22" width="30" height="30" rx="4" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/>
+          <rect x="50" y="8" width="16" height="16" rx="3" fill="#123049" stroke="#48d6c8"/>
+          <path d="M20,57 h74" stroke="#48d6c8" stroke-width="2" stroke-dasharray="4 4"/>
+        </svg>
+        <div><h3>Flow meters</h3><span class="muted" style="font-size:.55em;">Mag &amp; transit-time ultrasonic</span></div>
+      </div>
+      <p>Rate and totalized volume off your existing meter — see how much water moved, and when.</p>
+      <div><span class="u">GPM</span><span class="u">MGD</span><span class="u">Totalizer · gal</span></div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <svg width="118" height="86" viewBox="0 0 118 86">
+          <rect x="34" y="6" width="50" height="74" rx="8" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/>
+          <rect x="44" y="16" width="30" height="20" rx="3" fill="#0a1c2c"/>
+          <text x="59" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#ffd166">0.09</text>
+          <rect x="49" y="44" width="20" height="26" rx="3" fill="#123049" stroke="#2fa7e0"/>
+          <line x1="20" y1="57" x2="49" y2="57" stroke="#2fa7e0" stroke-width="2"/><line x1="69" y1="57" x2="98" y2="57" stroke="#2fa7e0" stroke-width="2"/>
+          <circle cx="59" cy="57" r="4" fill="#48d6c8" opacity=".6"/>
+        </svg>
+        <div><h3>Turbidimeters</h3><span class="muted" style="font-size:.55em;">Process &amp; finished-water</span></div>
+      </div>
+      <p>Watch water quality in real time and trend it — catch turbidity creep before it's a compliance problem.</p>
+      <div><span class="u">NTU</span><span class="u">Live trend</span><span class="u">High-turbidity alert</span></div>
+    </div>
+  </div>
+  <div class="chiprow">
+    <div class="chip"><span class="num-badge" style="width:1.3em;height:1.3em;font-size:.72em;">↕</span><span><b>Levels</b> — tanks &amp; wet-wells <span class="muted">(ft)</span></span></div>
+    <div class="chip"><span class="num-badge" style="width:1.3em;height:1.3em;font-size:.72em;">◔</span><span><b>Pressure</b> — mains &amp; pumps <span class="muted">(PSI)</span></span></div>
+    <div class="chip"><span class="num-badge" style="width:1.3em;height:1.3em;font-size:.72em;">⚙</span><span><b>Pumps</b> — run / fault status</span></div>
+  </div>
+  <p class="muted" style="font-size:.5em;margin-top:14px;">Connects over 4–20&nbsp;mA and Modbus RTU — the signals your instruments already speak.</p>
+</section>
+
+<!-- 5 DASHBOARD -->
+<section>
+  <div class="sectionlabel">Your data, on the web</div>
+  <h2>One screen for every site</h2>
+  <svg viewBox="0 0 1160 452" style="width:100%;margin-top:12px;">
+    <rect x="0" y="0" width="1160" height="452" rx="12" fill="#0a1c2c" stroke="#1d3a52" stroke-width="2"/>
+    <!-- top bar -->
+    <rect x="0" y="0" width="1160" height="40" rx="12" fill="#0f2438"/><rect x="0" y="20" width="1160" height="20" fill="#0f2438"/>
+    <circle cx="24" cy="20" r="5" fill="#ef6461"/><circle cx="44" cy="20" r="5" fill="#f0b429"/><circle cx="64" cy="20" r="5" fill="#37c97f"/>
+    <rect x="360" y="10" width="440" height="20" rx="10" fill="#08131f" stroke="#1d3a52"/>
+    <text x="580" y="24" text-anchor="middle" font-size="11" fill="#9fb6c9" font-family="Segoe UI,sans-serif">aquasummit.com/your-plant · secure</text>
+
+    <!-- sidebar -->
+    <rect x="0" y="40" width="300" height="412" fill="#0f2438"/>
+    <text x="26" y="76" font-size="14" font-weight="700" fill="#e8f1f8" font-family="Segoe UI,sans-serif">North Plant — Effluent</text>
+    <g font-family="Segoe UI,sans-serif">
+      <text x="26" y="110" font-size="11" fill="#9fb6c9" letter-spacing="1">FLOW RATE</text>
+      <text x="26" y="138" font-size="26" font-weight="700" fill="#48d6c8">1,240 <tspan font-size="12" fill="#9fb6c9">GPM</tspan></text>
+      <text x="160" y="110" font-size="11" fill="#9fb6c9" letter-spacing="1">TURBIDITY</text>
+      <text x="160" y="138" font-size="26" font-weight="700" fill="#48d6c8">0.09 <tspan font-size="12" fill="#9fb6c9">NTU</tspan></text>
+      <text x="26" y="180" font-size="11" fill="#9fb6c9" letter-spacing="1">TANK LEVEL</text>
+      <text x="26" y="208" font-size="26" font-weight="700" fill="#48d6c8">24.6 <tspan font-size="12" fill="#9fb6c9">ft</tspan></text>
+      <text x="160" y="180" font-size="11" fill="#9fb6c9" letter-spacing="1">TODAY TOTAL</text>
+      <text x="160" y="208" font-size="26" font-weight="700" fill="#48d6c8">1.84 <tspan font-size="12" fill="#9fb6c9">MG</tspan></text>
+    </g>
+    <g font-family="Segoe UI,sans-serif" font-size="12" font-weight="700">
+      <rect x="26" y="236" width="56" height="30" rx="6" fill="#2fa7e0"/><text x="54" y="256" text-anchor="middle" fill="#06121f">24H</text>
+      <rect x="90" y="236" width="56" height="30" rx="6" fill="#0d2336" stroke="#1d3a52"/><text x="118" y="256" text-anchor="middle" fill="#9fb6c9">48H</text>
+      <rect x="154" y="236" width="56" height="30" rx="6" fill="#0d2336" stroke="#1d3a52"/><text x="182" y="256" text-anchor="middle" fill="#9fb6c9">Week</text>
+      <rect x="218" y="236" width="60" height="30" rx="6" fill="#0d2336" stroke="#1d3a52"/><text x="248" y="256" text-anchor="middle" fill="#9fb6c9">Month</text>
+    </g>
+    <g font-family="Segoe UI,sans-serif" font-size="12">
+      <rect x="26" y="300" width="16" height="4" rx="2" fill="#2fa7e0"/><text x="50" y="305" fill="#c7d5e2">Flow rate [GPM]</text>
+      <rect x="26" y="324" width="16" height="4" rx="2" fill="#37c97f"/><text x="50" y="329" fill="#c7d5e2">Totalizer [gal]</text>
+      <rect x="26" y="348" width="16" height="4" rx="2" fill="#ffd166"/><text x="50" y="353" fill="#c7d5e2">Turbidity [NTU]</text>
+    </g>
+    <circle cx="30" cy="392" r="5" fill="#37c97f"/><text x="42" y="396" font-size="11" fill="#37c97f" font-family="Segoe UI,sans-serif">live · updated 2 min ago</text>
+
+    <!-- chart -->
+    <text x="330" y="76" font-size="15" font-weight="700" fill="#e8f1f8" font-family="Segoe UI,sans-serif">Metering — last 24 hours</text>
+    <g stroke="#12314a" stroke-width="1"><line x1="356" y1="118" x2="1120" y2="118"/><line x1="356" y1="178" x2="1120" y2="178"/><line x1="356" y1="238" x2="1120" y2="238"/><line x1="356" y1="298" x2="1120" y2="298"/><line x1="356" y1="358" x2="1120" y2="358"/></g>
+    <g font-family="Segoe UI,sans-serif" font-size="10.5" fill="#6f88a0">
+      <text x="348" y="122" text-anchor="end">1600</text><text x="348" y="242" text-anchor="end">1000</text><text x="348" y="362" text-anchor="end">400</text>
+      <text x="1128" y="122">1.8M</text><text x="1128" y="242">1.0M</text><text x="1128" y="362">0.2M</text>
+      <text x="356" y="392">00:00</text><text x="556" y="392">06:00</text><text x="756" y="392">12:00</text><text x="956" y="392">18:00</text><text x="1120" y="392" text-anchor="end">now</text>
+    </g>
+    <polyline points="356,352 456,340 556,320 656,298 756,266 856,234 956,204 1056,166 1120,148" fill="none" stroke="#37c97f" stroke-width="2.5"/>
+    <polyline points="356,250 396,238 436,262 476,230 516,248 556,212 596,236 636,206 676,244 716,214 756,194 796,230 836,204 876,224 916,198 956,236 996,208 1036,226 1076,198 1120,214" fill="none" stroke="#2fa7e0" stroke-width="2.5"/>
+    <polyline points="356,346 456,348 556,344 656,349 756,345 856,347 956,343 1056,346 1120,344" fill="none" stroke="#ffd166" stroke-width="2"/>
+    <circle r="4.5" fill="#48d6c8"><animateMotion dur="5s" repeatCount="indefinite" path="M356,250 L396,238 L436,262 L476,230 L516,248 L556,212 L596,236 L636,206 L676,244 L716,214 L756,194 L796,230 L836,204 L876,224 L916,198 L956,236 L996,208 L1036,226 L1076,198 L1120,214"/></circle>
+  </svg>
+  <p class="muted" style="font-size:.5em;margin-top:12px;">Live flow, turbidity, level, and daily totals — trended and totalized for you. Log in from any browser; nothing to install.</p>
+</section>
+
+<!-- 6 SECURITY -->
+<section>
+  <div class="sectionlabel">Security</div>
+  <h2>Secure by design</h2>
+  <div class="grid12" style="margin-top:.7em;">
+    <div class="seccards">
+      <div class="card">
+        <span class="ic"><svg width="46" height="46" viewBox="0 0 46 46"><path d="M23,5 l15,5 v9 c0,11 -8,17 -15,20 c-7,-3 -15,-9 -15,-20 v-9 Z" fill="none" stroke="#48d6c8" stroke-width="2"/><path d="M15,23 l6,6 l10,-12" fill="none" stroke="#37c97f" stroke-width="2.5"/></svg></span>
+        <div><b>Encrypted connection</b><p>Each SNC dials out to us over an encrypted link — no open ports on your network for anyone to find.</p></div>
+      </div>
+      <div class="card">
+        <span class="ic"><svg width="46" height="46" viewBox="0 0 46 46"><rect x="11" y="20" width="24" height="18" rx="3" fill="none" stroke="#ffd166" stroke-width="2"/><path d="M15,20 v-4 a8,8 0 0,1 16,0 v4" fill="none" stroke="#ffd166" stroke-width="2"/><circle cx="23" cy="28" r="2.6" fill="#ffd166"/></svg></span>
+        <div><b>Private login per project</b><p>Every site gets its own username and password. Operators see only their own plant — nobody else's.</p></div>
+      </div>
+      <div class="card">
+        <span class="ic"><svg width="46" height="46" viewBox="0 0 46 46"><rect x="9" y="11" width="28" height="9" rx="2" fill="none" stroke="#48d6c8" stroke-width="2"/><rect x="9" y="25" width="28" height="9" rx="2" fill="none" stroke="#48d6c8" stroke-width="2"/><circle cx="15" cy="15.5" r="1.8" fill="#37c97f"/><circle cx="15" cy="29.5" r="1.8" fill="#37c97f"/></svg></span>
+        <div><b>US-hosted, managed by us</b><p>Your data lives on AquaSummit servers in Atlanta, GA — patched, backed up, and monitored. Your data stays yours.</p></div>
+      </div>
+    </div>
+    <div style="text-align:center;">
+      <svg viewBox="0 0 420 300" style="width:100%;max-width:420px;">
+        <rect x="18" y="128" width="90" height="72" rx="10" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/>
+        <text x="63" y="170" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="17" font-weight="800" fill="#e8f1f8">SNC</text>
+        <text x="63" y="222" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="13" fill="#9fb6c9">field site</text>
+        <rect x="114" y="153" width="188" height="22" rx="11" fill="#0d2336" stroke="#37c97f" stroke-width="2"/>
+        <text x="208" y="145" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="12" fill="#7fe0a8" font-weight="700">encrypted tunnel</text>
+        <g fill="#37c97f"><circle cx="138" cy="164" r="3.2"/><circle cx="173" cy="164" r="3.2"/><circle cx="208" cy="164" r="3.2"/><circle cx="243" cy="164" r="3.2"/><circle cx="278" cy="164" r="3.2"/></g>
+        <rect x="308" y="128" width="90" height="72" rx="10" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/>
+        <rect x="320" y="140" width="66" height="12" rx="2" fill="#123049" stroke="#2fa7e0"/><circle cx="329" cy="146" r="2.6" fill="#37c97f"/>
+        <rect x="320" y="158" width="66" height="12" rx="2" fill="#123049" stroke="#2fa7e0"/><circle cx="329" cy="164" r="2.6" fill="#37c97f"/>
+        <rect x="320" y="176" width="66" height="12" rx="2" fill="#123049" stroke="#2fa7e0"/><circle cx="329" cy="182" r="2.6" fill="#37c97f"/>
+        <circle cx="353" cy="112" r="15" fill="#0d2336" stroke="#ffd166" stroke-width="2"/><rect x="347" y="110" width="12" height="9" rx="2" fill="none" stroke="#ffd166" stroke-width="1.7"/><path d="M349,110 v-2 a4,4 0 0,1 8,0 v2" fill="none" stroke="#ffd166" stroke-width="1.7"/>
+        <text x="353" y="222" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="13" fill="#9fb6c9">AquaSummit server</text>
+        <g transform="translate(150,248)">
+          <path d="M20,0 a13,13 0 0,1 13,13 c0,10 -13,21 -13,21 S7,23 7,13 A13,13 0 0,1 20,0 Z" fill="#c8102e"/>
+          <circle cx="20" cy="13" r="5" fill="#fff"/>
+          <text x="44" y="20" font-family="Segoe UI,sans-serif" font-size="15" font-weight="700" fill="#e8f1f8">Atlanta, GA · USA</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 7 WHERE IT FITS -->
+<section>
+  <div class="sectionlabel">Where it fits</div>
+  <h2>Where the SNC earns its keep</h2>
+  <p class="muted" style="font-size:.6em;margin-top:-.1em;">Purpose-built for remote sites and smaller water systems.</p>
+  <div class="usegrid">
+    <div class="card">
+      <span class="ic"><svg width="52" height="52" viewBox="0 0 52 52"><rect x="8" y="20" width="26" height="22" rx="2" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/><rect x="16" y="10" width="8" height="12" fill="#2fa7e0"/><path d="M34,30 h10 v12 h-10" fill="none" stroke="#2fa7e0" stroke-width="2"/><circle cx="21" cy="34" r="4" fill="none" stroke="#ffd166" stroke-width="2"/></svg></span>
+      <div><b>Pump stations</b><br><span class="muted">Run/fault and flow in GPM without a truck roll every day.</span></div>
+    </div>
+    <div class="card">
+      <span class="ic"><svg width="52" height="52" viewBox="0 0 52 52"><rect x="12" y="8" width="28" height="36" rx="3" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/><path d="M12,28 q7,-6 14,0 t14,0 V44 H12 Z" fill="#123049"/><path d="M12,28 q7,-6 14,0 t14,0" fill="none" stroke="#2fa7e0" stroke-width="2"/></svg></span>
+      <div><b>Tank levels</b><br><span class="muted">Storage in feet, in real time — catch overflows and low tanks early.</span></div>
+    </div>
+    <div class="card">
+      <span class="ic"><svg width="52" height="52" viewBox="0 0 52 52"><rect x="10" y="18" width="32" height="26" rx="2" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/><path d="M10,30 h32" stroke="#2fa7e0" stroke-width="2"/><circle cx="26" cy="24" r="3" fill="#ffd166"/><path d="M18,12 h16" stroke="#2fa7e0" stroke-width="2"/></svg></span>
+      <div><b>Lift stations</b><br><span class="muted">Wet-well levels and pump runtime across all your sites.</span></div>
+    </div>
+    <div class="card">
+      <span class="ic"><svg width="52" height="52" viewBox="0 0 52 52"><path d="M26,8 s10,12 10,19 a10,10 0 0,1 -20,0 c0,-7 10,-19 10,-19 Z" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/><path d="M20,30 a6,6 0 0,0 12,0" fill="none" stroke="#2fa7e0" stroke-width="2"/></svg></span>
+      <div><b>Water quality</b><br><span class="muted">Turbidity in NTU trended continuously — plant or distribution.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 SIMPLE TO OWN -->
+<section>
+  <div class="sectionlabel">Simple to own</div>
+  <h2>No big system to buy</h2>
+  <p class="muted" style="font-size:.6em;margin-top:-.1em;">We host the platform and keep it running. You pay for the device and the data plan — that's it.</p>
+  <div class="reason">
+    <div class="card">
+      <span class="ic"><svg width="56" height="56" viewBox="0 0 56 56"><ellipse cx="28" cy="16" rx="16" ry="7" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/><path d="M12,16 v14 a16,7 0 0,0 32,0 V16" fill="none" stroke="#48d6c8" stroke-width="2"/><path d="M12,30 a16,7 0 0,0 32,0" fill="none" stroke="#2fa7e0" stroke-width="2"/><path d="M40,44 l4,4 l8,-9" fill="none" stroke="#37c97f" stroke-width="3"/></svg></span>
+      <h4>No server, no license fees</h4>
+      Hosted, patched, and backed up by us. Nothing for your IT to install or maintain.
+    </div>
+    <div class="card">
+      <span class="ic"><svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="30" r="17" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/><line x1="28" y1="30" x2="28" y2="19" stroke="#2fa7e0" stroke-width="2.5"/><line x1="28" y1="30" x2="36" y2="34" stroke="#2fa7e0" stroke-width="2.5"/><path d="M28,9 v5 M45,26 h-4" stroke="#9fb6c9" stroke-width="2"/></svg></span>
+      <h4>Up and running in a day</h4>
+      Wire into the meter you've already got, power it up, and see data on the web the same afternoon.
+    </div>
+    <div class="card">
+      <span class="ic"><svg width="56" height="56" viewBox="0 0 56 56"><rect x="8" y="34" width="9" height="14" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/><rect x="23" y="24" width="9" height="24" fill="#0d2336" stroke="#48d6c8" stroke-width="2"/><rect x="38" y="14" width="9" height="34" fill="#2fa7e0" stroke="#48d6c8" stroke-width="2"/></svg></span>
+      <h4>Grows with you</h4>
+      Start with one site. Add pumps, tanks, and plants to the same login as you go.
+    </div>
+  </div>
+  <p class="tunnel-note"><b>Optional alerts:</b> high/low and fault notifications by text or messaging app — set the limits that matter for each site.</p>
+</section>
+
+<!-- 9 CONTACT -->
+<section data-background-color="#08131f">
+  <div style="height:560px;display:flex;flex-direction:column;justify-content:center;">
+    <div class="contact-card">
+      <div class="kicker">Let's talk about your site</div>
+      <p class="big-q" style="font-size:1.5em;">Tell us what you're trying to see.</p>
+      <p class="lead" style="font-size:.8em;max-width:22em;margin-top:.2em;">Whatever the instrument or the application — a pump station, a tank, a turbidimeter on your finished water — we'll spec the right SNC, set it up, and walk you through your own data.</p>
+      <div class="contact-row">
+        <span class="cbtn">
+          <svg width="26" height="26" viewBox="0 0 26 26"><rect x="2" y="5" width="22" height="16" rx="3" fill="none" stroke="#06121f" stroke-width="2"/><path d="M3,7 l10,7 l10,-7" fill="none" stroke="#06121f" stroke-width="2"/></svg>
+          <span>Email us<small>ethan@aquasummit.com</small></span>
+        </span>
+        <span class="cbtn alt">
+          <svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="11" fill="none" stroke="#48d6c8" stroke-width="2"/><path d="M2,13 h22" stroke="#48d6c8" stroke-width="2"/><path d="M13,2 a16,16 0 0,1 0,22 a16,16 0 0,1 0,-22" fill="none" stroke="#48d6c8" stroke-width="1.6"/></svg>
+          <span>Visit<small>aquasummit.com</small></span>
+        </span>
+      </div>
+    </div>
+    <p class="muted" style="font-size:.46em;margin-top:22px;letter-spacing:1px;padding-left:6px;">AQUASUMMIT INSTRUMENTS · SMART NETWORK CONTROLLER · US-HOSTED IN ATLANTA, GA</p>
+  </div>
+</section>
+
+</div></div>
+<script>
+(function(){
+  var stage=document.querySelector('.slides');
+  var slides=[].slice.call(document.querySelectorAll('.slides section'));
+  var i=0;
+  var bar=document.createElement('div');bar.className='deck-bar';document.body.appendChild(bar);
+  var counter=document.createElement('div');counter.className='deck-counter';document.body.appendChild(counter);
+  var nav=document.createElement('div');nav.className='deck-nav';
+  nav.innerHTML='<button data-d="-1" aria-label="Previous">\u2039</button><button data-d="1" aria-label="Next">\u203a</button>';
+  document.body.appendChild(nav);
+  var hint=document.createElement('div');hint.className='deck-hint';hint.textContent='\u2190 \u2192 navigate \u00b7 F fullscreen';document.body.appendChild(hint);
+  function scale(){var s=Math.min(window.innerWidth/1280,window.innerHeight/720);stage.style.transform='scale('+s+')';}
+  function show(n){
+    if(n<0)n=0; if(n>slides.length-1)n=slides.length-1;
+    slides[i].classList.remove('active'); i=n; slides[i].classList.add('active');
+    counter.textContent=(i+1)+' / '+slides.length;
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    try{history.replaceState(null,'','#'+(i+1));}catch(e){}
+  }
+  window.addEventListener('resize',scale);
+  document.addEventListener('keydown',function(e){
+    if(['ArrowRight','ArrowDown','PageDown',' '].indexOf(e.key)>-1){show(i+1);e.preventDefault();}
+    else if(['ArrowLeft','ArrowUp','PageUp'].indexOf(e.key)>-1){show(i-1);e.preventDefault();}
+    else if(e.key==='Home'){show(0);e.preventDefault();}
+    else if(e.key==='End'){show(slides.length-1);e.preventDefault();}
+    else if(e.key==='f'||e.key==='F'){if(document.fullscreenElement){document.exitFullscreen();}else{document.documentElement.requestFullscreen();}}
+  });
+  nav.addEventListener('click',function(e){var b=e.target.closest('button');if(b){show(i+parseInt(b.getAttribute('data-d'),10));e.stopPropagation();}});
+  document.addEventListener('click',function(e){if(e.target.closest('a')||e.target.closest('.deck-nav'))return;show(i+1);});
+  var start=parseInt((location.hash||'').replace('#',''),10)||1;
+  scale(); show(start-1);
+})();
+</script>
+</body>
+</html>
